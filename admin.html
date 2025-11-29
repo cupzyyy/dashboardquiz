@@ -1,0 +1,455 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no" />
+  <title>Admin Dashboard — Referral Rewards</title>
+  <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" rel="stylesheet">
+  <style>
+    :root{
+      --bg:#0f1218; --card:#151a22; --accent:#f07733; --accent2:#6f9dff;
+      --text:#e6ebf5; --muted:#9aa4b2; --border:#243041; --danger:#ff4d6d; --success:#2ecc71; --warn:#f8c94e;
+      --shadow:0 6px 20px rgba(0,0,0,.35); --radius:16px;
+    }
+    *{box-sizing:border-box}
+    body{margin:0;background:#0f1218;color:var(--text);font-family:Inter,system-ui,-apple-system,Segoe UI,Roboto,Ubuntu,"Helvetica Neue",Arial,sans-serif}
+    header{display:flex;justify-content:space-between;align-items:center;padding:16px 20px;border-bottom:1px solid var(--border);background:rgba(21,26,34,.8);backdrop-filter:blur(6px);position:sticky;top:0;z-index:9}
+    .logo{display:flex;gap:12px;align-items:center}
+    .logo .icon{width:38px;height:38px;border-radius:12px;background:linear-gradient(135deg,#f07733,#6f9dff);display:flex;align-items:center;justify-content:center;color:#fff;box-shadow:var(--shadow)}
+    .container{max-width:1080px;margin:0 auto;padding:18px}
+    .grid{display:grid;grid-template-columns:repeat(12,1fr);gap:14px}
+    .col-12{grid-column:span 12}
+    .col-6{grid-column:span 6}
+    .col-4{grid-column:span 4}
+    .card{background:#151a22;border:1px solid var(--border);border-radius:var(--radius);box-shadow:var(--shadow);padding:16px}
+    .muted{color:var(--muted)}
+    .btn{padding:10px 14px;border:none;border-radius:12px;background:var(--accent);color:#fff;font-weight:600;cursor:pointer;transition:.2s;box-shadow:var(--shadow)}
+    .btn.secondary{background:#1b2433;color:#fff;border:1px solid var(--border)}
+    .btn.success{background:var(--success)}
+    .btn.warn{background:var(--warn);color:#101316}
+    .btn.danger{background:var(--danger)}
+    .field{display:flex;flex-direction:column;gap:8px;margin-bottom:12px}
+    .field label{font-size:13px;color:var(--muted)}
+    .field input,.field select,.field textarea{width:100%;padding:12px;border-radius:12px;border:1px solid var(--border);background:#0e1218;color:#fff}
+    .table{width:100%;border-collapse:collapse}
+    .table th,.table td{border:1px solid var(--border);padding:10px;text-align:left}
+    .table th{background:#1b2433}
+    .tags{display:flex;flex-wrap:wrap;gap:8px}
+    .tag{background:#1b2433;border:1px solid var(--border);padding:6px 10px;border-radius:999px}
+    .list{display:flex;flex-direction:column;gap:10px}
+    .list-item{display:flex;gap:12px;justify-content:space-between;align-items:center;background:#121724;border:1px solid var(--border);border-radius:12px;padding:12px}
+    .icon{width:38px;height:38px;border-radius:10px;background:#1b2433;border:1px solid var(--border);display:flex;align-items:center;justify-content:center}
+    @media (max-width:768px){
+      .col-6,.col-4{grid-column:span 12}
+      .table{font-size:13px}
+      .table th,.table td{padding:8px}
+    }
+  </style>
+</head>
+<body>
+  <header>
+    <div class="logo"><div class="icon"><i class="fa-solid fa-shield-halved"></i></div><div><b>Admin Dashboard</b><div class="muted">Referral Rewards</div></div></div>
+    <div class="actions">
+      <button class="btn secondary" id="seedDemo"><i class="fa-solid fa-flask"></i> Seed demo</button>
+      <button class="btn danger" id="clearAll"><i class="fa-solid fa-trash"></i> Hapus semua</button>
+    </div>
+  </header>
+
+  <div class="container">
+    <div class="grid">
+      <div class="col-4">
+        <div class="card">
+          <h3>Statistik</h3>
+          <div class="list">
+            <div class="list-item"><div class="icon"><i class="fa-solid fa-users"></i></div><div>Total pengguna</div><div><b id="totalUsers">0</b></div></div>
+            <div class="list-item"><div class="icon"><i class="fa-solid fa-wallet"></i></div><div>Pengajuan penarikan</div><div><b id="totalWithdraws">0</b></div></div>
+          </div>
+        </div>
+      </div>
+
+      <div class="col-8">
+        <div class="card">
+          <h3>Teks modal (halaman user)</h3>
+          <div class="field">
+            <label>Konten informasi</label>
+            <textarea id="modalText" rows="4" placeholder="Informasi singkat untuk pengguna..."></textarea>
+          </div>
+          <div class="field">
+            <label>Anti-cheat</label>
+            <select id="antiCheat">
+              <option value="true">Aktif</option>
+              <option value="false">Nonaktif</option>
+            </select>
+          </div>
+          <button class="btn success" id="saveModal"><i class="fa-solid fa-floppy-disk"></i> Simpan</button>
+          <div class="muted" id="saveModalMsg" style="margin-top:6px">—</div>
+        </div>
+      </div>
+
+      <div class="col-12">
+        <div class="card">
+          <h3>Atur hadiah per misi & syarat undangan</h3>
+          <p class="muted">Masukkan daftar nominal (pisahkan dengan koma). Contoh: 150,200,250,300</p>
+          <div class="grid">
+            <div class="col-4"><div class="field"><label>Snake</label><input id="rwSnake" placeholder="150,200,250,300"></div></div>
+            <div class="col-4"><div class="field"><label>Teka-teki</label><input id="rwRiddle" placeholder="150,200,250,300"></div></div>
+            <div class="col-4"><div class="field"><label>Matematika</label><input id="rwMath" placeholder="150,200,250,300"></div></div>
+            <div class="col-4"><div class="field"><label>Quiz Inggris</label><input id="rwEN" placeholder="150,200,250,300"></div></div>
+            <div class="col-4"><div class="field"><label>Undang teman</label><input id="rwInvite" placeholder="150,200,250,300"></div></div>
+            <div class="col-4"><div class="field"><label>Quiz Indonesia</label><input id="rwID" placeholder="150,200,250,300"></div></div>
+            <div class="col-6"><div class="field"><label>Syarat undangan untuk Rp 15.000</label><input id="minInv15" type="number" placeholder="5"></div></div>
+            <div class="col-6"><div class="field"><label>Syarat undangan untuk Rp 30.000</label><input id="minInv30" type="number" placeholder="10"></div></div>
+            <div class="col-12"><div class="field"><label>Nominal penarikan tersedia</label><input id="withdrawOpts" placeholder="200,2000,3500,15000,30000"></div></div>
+          </div>
+          <button class="btn success" id="saveRewards"><i class="fa-solid fa-floppy-disk"></i> Simpan</button>
+          <div class="muted" id="saveRewardsMsg" style="margin-top:6px">—</div>
+        </div>
+      </div>
+
+      <div class="col-12">
+        <div class="card">
+          <h3>Daftar pengguna</h3>
+          <div class="field">
+            <label>Cari username</label>
+            <input id="searchUser" placeholder="ketik username...">
+          </div>
+          <table class="table" id="usersTable">
+            <thead>
+              <tr>
+                <th>Username</th>
+                <th>Nomor</th>
+                <th>Saldo</th>
+                <th>Referral</th>
+                <th>Wallet</th>
+                <th>Aksi</th>
+              </tr>
+            </thead>
+            <tbody></tbody>
+          </table>
+        </div>
+      </div>
+
+      <div class="col-12">
+        <div class="card">
+          <h3>Aktivitas pengguna</h3>
+          <div id="activityList" class="list"></div>
+        </div>
+      </div>
+
+      <div class="col-12">
+        <div class="card">
+          <h3>Pengajuan penarikan</h3>
+          <table class="table" id="withdrawTable">
+            <thead>
+              <tr>
+                <th>User</th>
+                <th>Jumlah</th>
+                <th>Wallet</th>
+                <th>Status</th>
+                <th>Aksi</th>
+              </tr>
+            </thead>
+            <tbody></tbody>
+          </table>
+        </div>
+      </div>
+
+    </div>
+  </div>
+
+  <script>
+    // ===== Shared storage schema with user app =====
+    const LS = {
+      usersKey: 'rr_users',
+      sessionKey: 'rr_session',
+      configKey: 'rr_config',
+      withdrawKey: 'rr_withdraws'
+    };
+
+    const DefaultConfig = {
+      modalText: 'Selamat datang! Mainkan misi, undang teman, dan tarik saldo ke e-wallet. Jaga fair play: dilarang cheat.',
+      rewards: {
+        snake:[150,200,250,300],
+        riddle:[150,200,250,300],
+        math:[150,200,250,300],
+        quizEN:[150,200,250,300],
+        invite:[150,200,250,300],
+        quizID:[150,200,250,300]
+      },
+      withdrawOptions:[200,2000,3500,15000,30000],
+      minInviteFor15000:5,
+      minInviteFor30000:10,
+      antiCheatEnabled:true
+    };
+
+    function getConfig(){
+      const c = JSON.parse(localStorage.getItem(LS.configKey)||'null');
+      if(!c){ localStorage.setItem(LS.configKey, JSON.stringify(DefaultConfig)); return DefaultConfig; }
+      return c;
+    }
+    function setConfig(cfg){ localStorage.setItem(LS.configKey, JSON.stringify(cfg)); }
+
+    function getUsers(){ return JSON.parse(localStorage.getItem(LS.usersKey)||'[]'); }
+    function setUsers(arr){ localStorage.setItem(LS.usersKey, JSON.stringify(arr)); }
+    function getWithdraws(){ return JSON.parse(localStorage.getItem(LS.withdrawKey)||'[]'); }
+    function setWithdraws(arr){ localStorage.setItem(LS.withdrawKey, JSON.stringify(arr)); }
+
+    function money(n){ return (n||0).toLocaleString('id-ID'); }
+
+    // ===== Stats =====
+    function renderStats(){
+      const users = getUsers();
+      const wds = getWithdraws();
+      document.getElementById('totalUsers').textContent = users.length;
+      document.getElementById('totalWithdraws').textContent = wds.length;
+    }
+
+    // ===== Modal & anti-cheat settings =====
+    const modalText = document.getElementById('modalText');
+    const antiCheat = document.getElementById('antiCheat');
+    document.getElementById('saveModal').onclick = ()=>{
+      const cfg=getConfig();
+      cfg.modalText = modalText.value.trim() || DefaultConfig.modalText;
+      cfg.antiCheatEnabled = (antiCheat.value==='true');
+      setConfig(cfg);
+      document.getElementById('saveModalMsg').textContent='Disimpan.';
+    };
+
+    // ===== Rewards settings =====
+    function parseList(s){ return s.split(',').map(x=>parseInt(x.trim())).filter(n=>!isNaN(n)); }
+    const fields = {
+      rwSnake:'rwSnake', rwRiddle:'rwRiddle', rwMath:'rwMath', rwEN:'rwEN', rwInvite:'rwInvite', rwID:'rwID',
+      minInv15:'minInv15', minInv30:'minInv30', withdrawOpts:'withdrawOpts'
+    };
+
+    function loadConfigToUI(){
+      const cfg=getConfig();
+      document.getElementById(fields.rwSnake).value = cfg.rewards.snake.join(',');
+      document.getElementById(fields.rwRiddle).value = cfg.rewards.riddle.join(',');
+      document.getElementById(fields.rwMath).value = cfg.rewards.math.join(',');
+      document.getElementById(fields.rwEN).value = cfg.rewards.quizEN.join(',');
+      document.getElementById(fields.rwInvite).value = cfg.rewards.invite.join(',');
+      document.getElementById(fields.rwID).value = cfg.rewards.quizID.join(',');
+      document.getElementById(fields.minInv15).value = cfg.minInviteFor15000;
+      document.getElementById(fields.minInv30).value = cfg.minInviteFor30000;
+      document.getElementById(fields.withdrawOpts).value = cfg.withdrawOptions.join(',');
+      modalText.value = cfg.modalText || DefaultConfig.modalText;
+      antiCheat.value = cfg.antiCheatEnabled ? 'true':'false';
+    }
+
+    document.getElementById('saveRewards').onclick = ()=>{
+      const cfg=getConfig();
+      cfg.rewards.snake = parseList(document.getElementById(fields.rwSnake).value);
+      cfg.rewards.riddle = parseList(document.getElementById(fields.rwRiddle).value);
+      cfg.rewards.math = parseList(document.getElementById(fields.rwMath).value);
+      cfg.rewards.quizEN = parseList(document.getElementById(fields.rwEN).value);
+      cfg.rewards.invite = parseList(document.getElementById(fields.rwInvite).value);
+      cfg.rewards.quizID = parseList(document.getElementById(fields.rwID).value);
+      cfg.minInviteFor15000 = parseInt(document.getElementById(fields.minInv15).value)||5;
+      cfg.minInviteFor30000 = parseInt(document.getElementById(fields.minInv30).value)||10;
+      cfg.withdrawOptions = parseList(document.getElementById(fields.withdrawOpts).value);
+      setConfig(cfg);
+      document.getElementById('saveRewardsMsg').textContent='Disimpan.';
+    };
+
+    // ===== Users table =====
+    const usersTableBody = document.querySelector('#usersTable tbody');
+    function renderUsers(filter=''){
+      const users = getUsers().filter(u=>u.username.toLowerCase().includes(filter.toLowerCase()));
+      usersTableBody.innerHTML='';
+      users.forEach(u=>{
+        const tr = document.createElement('tr');
+        tr.innerHTML = `
+          <td>${u.username}</td>
+          <td>${u.phone||'-'}</td>
+          <td>Rp ${money(u.balance||0)}</td>
+          <td>${u.referrals||0}</td>
+          <td>${(u.wallet?.number||'-')}<br><small class="muted">${(u.wallet?.name||'-')}</small></td>
+          <td>
+            <button class="btn secondary" data-edit="${u.username}"><i class="fa-solid fa-pen"></i></button>
+            <button class="btn danger" data-del="${u.username}"><i class="fa-solid fa-trash"></i></button>
+            <button class="btn success" data-addsaldo="${u.username}"><i class="fa-solid fa-plus"></i> Saldo</button>
+          </td>
+        `;
+        usersTableBody.appendChild(tr);
+      });
+      // bind actions
+      usersTableBody.querySelectorAll('button[data-edit]').forEach(b=>{
+        b.onclick = ()=>{
+          const uname=b.getAttribute('data-edit');
+          const users=getUsers();
+          const u=users.find(x=>x.username===uname);
+          if(!u) return;
+          const newPhone = prompt('Nomor (HP):', u.phone||'');
+          const newWalletNum = prompt('Wallet nomor:', u.wallet?.number||'');
+          const newWalletName = prompt('Wallet nama:', u.wallet?.name||'');
+          if(newPhone!==null) u.phone=newPhone;
+          u.wallet = { number:newWalletNum||'', name:newWalletName||'' };
+          setUsers(users);
+          renderUsers(document.getElementById('searchUser').value);
+        };
+      });
+      usersTableBody.querySelectorAll('button[data-del]').forEach(b=>{
+        b.onclick = ()=>{
+          const uname=b.getAttribute('data-del');
+          let users=getUsers();
+          users = users.filter(x=>x.username!==uname);
+          setUsers(users);
+          // Also remove withdraws
+          let wds=getWithdraws();
+          wds = wds.filter(w=>w.username!==uname);
+          setWithdraws(wds);
+          renderUsers(document.getElementById('searchUser').value);
+          renderWithdraws();
+          renderStats();
+        };
+      });
+      usersTableBody.querySelectorAll('button[data-addsaldo]').forEach(b=>{
+        b.onclick = ()=>{
+          const uname=b.getAttribute('data-addsaldo');
+          const users=getUsers();
+          const u=users.find(x=>x.username===uname);
+          const add = prompt('Tambah saldo (Rp):', '500');
+          const val = parseInt(add||'0');
+          if(!isNaN(val) && val>0){
+            u.balance = (u.balance||0)+val;
+            u.history = u.history||[];
+            u.history.push({ type:'admin_addsaldo', amount:val, at:Date.now() });
+            setUsers(users);
+            renderUsers(document.getElementById('searchUser').value);
+            renderStats();
+          }
+        };
+      });
+    }
+    document.getElementById('searchUser').addEventListener('input', (e)=> renderUsers(e.target.value));
+
+    // ===== Activity list =====
+    function renderActivity(){
+      const wrap = document.getElementById('activityList');
+      wrap.innerHTML='';
+      const users=getUsers();
+      users.forEach(u=>{
+        const div = document.createElement('div');
+        div.className='list-item';
+        const last = (u.history||[]).slice(-3).reverse();
+        div.innerHTML = `
+          <div style="display:flex;align-items:center;gap:12px">
+            <div class="icon"><i class="fa-solid fa-user"></i></div>
+            <div>
+              <div><b>${u.username}</b></div>
+              <div class="muted">Saldo: Rp ${money(u.balance||0)} • Referral: ${u.referrals||0}</div>
+              <div class="tags">${ last.map(h=>`<span class="tag">${(h.type||'aksi')} • Rp ${money(h.amount||0)}</span>`).join('') || '<span class="muted">Tidak ada aktivitas</span>'}</div>
+            </div>
+          </div>
+          <div><small class="muted">Akun: ${u.phone||'-'}</small></div>
+        `;
+        wrap.appendChild(div);
+      });
+    }
+
+    // ===== Withdraw table =====
+    const withdrawBody = document.querySelector('#withdrawTable tbody');
+    function renderWithdraws(){
+      const wds = getWithdraws().slice().sort((a,b)=>b.createdAt-a.createdAt);
+      withdrawBody.innerHTML='';
+      wds.forEach(w=>{
+        const tr = document.createElement('tr');
+        tr.innerHTML = `
+          <td>${w.username}</td>
+          <td>Rp ${money(w.amount)}</td>
+          <td>${w.wallet?.number||'-'}<br><small class="muted">${w.wallet?.name||'-'}</small></td>
+          <td>${w.status}</td>
+          <td>
+            <button class="btn success" data-approve="${w.id}"><i class="fa-solid fa-check"></i></button>
+            <button class="btn danger" data-reject="${w.id}"><i class="fa-solid fa-xmark"></i></button>
+          </td>
+        `;
+        withdrawBody.appendChild(tr);
+      });
+
+      withdrawBody.querySelectorAll('button[data-approve]').forEach(b=>{
+        b.onclick = ()=>{
+          const id=b.getAttribute('data-approve');
+          const wds=getWithdraws();
+          const w=wds.find(x=>x.id===id);
+          if(w){ w.status='SUKSES'; setWithdraws(wds); renderWithdraws(); }
+          // Update user history status
+          const users=getUsers();
+          const u=users.find(x=>x.id===w.userId);
+          if(u){
+            const item=(u.history||[]).find(h=>h.type==='withdraw_request' && h.amount===w.amount && !h.status || h.status==='PENDING');
+            if(item){ item.status='SUKSES'; }
+            setUsers(users);
+            renderActivity();
+          }
+        };
+      });
+      withdrawBody.querySelectorAll('button[data-reject]').forEach(b=>{
+        b.onclick = ()=>{
+          const id=b.getAttribute('data-reject');
+          const wds=getWithdraws();
+          const w=wds.find(x=>x.id===id);
+          if(w){ w.status='DITOLAK'; setWithdraws(wds); renderWithdraws(); }
+          // Optionally refund amount to user balance
+          if(confirm('Kembalikan saldo ke pengguna?')){
+            const users=getUsers();
+            const u=users.find(x=>x.id===w.userId);
+            if(u){
+              u.balance=(u.balance||0)+w.amount;
+              u.history=u.history||[];
+              u.history.push({ type:'withdraw_refund', amount:w.amount, at:Date.now() });
+              setUsers(users);
+              renderUsers(document.getElementById('searchUser').value);
+              renderActivity();
+            }
+          }
+        };
+      });
+    }
+
+    // ===== Seed demo & clear =====
+    document.getElementById('seedDemo').onclick = ()=>{
+      let users=getUsers();
+      if(users.length===0){
+        users = [
+          { id:'u_1', phone:'08111111111', username:'cupz', passwordHash:'h123', balance:2500, referrals:3, wallet:{number:'08111111111',name:'Cupz'}, history:[{type:'reward',amount:200,at:Date.now()-86400000}] },
+          { id:'u_2', phone:'08222222222', username:'lisa', passwordHash:'h456', balance:500, referrals:6, wallet:{number:'08222222222',name:'Lisa'}, history:[{type:'withdraw_request',amount:200,status:'PENDING',at:Date.now()-3600000}] },
+        ];
+        setUsers(users);
+      }
+      let wds=getWithdraws();
+      if(wds.length===0){
+        wds = [
+          { id:'w_1', userId:'u_2', username:'lisa', amount:200, wallet:{number:'08222222222',name:'Lisa'}, status:'PENDING', createdAt:Date.now()-3600000 }
+        ];
+        setWithdraws(wds);
+      }
+      const cfg=getConfig(); setConfig(cfg); // ensure defaults
+      renderAll();
+      alert('Demo data dibuat.');
+    };
+
+    document.getElementById('clearAll').onclick = ()=>{
+      if(!confirm('Hapus SEMUA data?')) return;
+      localStorage.removeItem(LS.usersKey);
+      localStorage.removeItem(LS.withdrawKey);
+      // Keep config or clear?
+      // localStorage.removeItem(LS.configKey);
+      renderAll();
+      alert('Data dihapus.');
+    };
+
+    // ===== Render all =====
+    function renderAll(){
+      renderStats();
+      loadConfigToUI();
+      renderUsers(document.getElementById('searchUser').value||'');
+      renderActivity();
+      renderWithdraws();
+    }
+
+    window.addEventListener('load', renderAll);
+  </script>
+</body>
+</html>
